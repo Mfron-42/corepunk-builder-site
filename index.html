@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Corepunk Builder</title>
+<meta name="description" content="Fan-made character planner for Corepunk — heroes, masteries, gear, chips, artifacts, runes and talents.">
+<link rel="icon" type="image/png" href="icons/heroes/champion.png">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div id="loading-veil" class="loading-veil"><p>Loading builder data…</p></div>
+
+<!-- ── Bandeau d'en-tête : titre, nom de build, niveau, partage/sauvegardes ── -->
+<header class="topbar">
+  <div class="topbar-left">
+    <h1 class="app-title">Corepunk <span>Builder</span></h1>
+  </div>
+
+  <div class="topbar-mid">
+    <input id="build-name" class="build-name-input" type="text" maxlength="80" placeholder="Untitled build" aria-label="Build name" value="Untitled build">
+    <div class="level-control">
+      <label for="level-slider">Level</label>
+      <input id="level-slider" type="range" min="1" max="40" value="1" step="1">
+      <span id="level-readout" class="mono">LV 01</span>
+    </div>
+  </div>
+
+  <div class="topbar-right">
+    <button class="act" data-action="copy-link">Copy link</button>
+    <button class="act" data-action="save-build">Save</button>
+    <div class="saves-wrap">
+      <button class="act" data-action="toggle-saves" aria-haspopup="true">Saves ▾</button>
+      <div id="saves-panel" class="saves-panel">
+        <h3>Saved builds</h3>
+        <div id="saves-list"></div>
+      </div>
+    </div>
+    <button class="act" data-action="export-build">Export</button>
+    <button class="act" data-action="trigger-import">Import</button>
+    <input id="import-input" class="visually-hidden" type="file" accept="application/json" data-action="import-file" tabindex="-1" aria-hidden="true">
+    <button class="act ghost" data-action="new-build">New</button>
+  </div>
+</header>
+
+<div id="tier-warnings" class="tier-warnings-slot"></div>
+<div id="onboard-slot" class="tier-warnings-slot"></div>
+
+<!-- ── Corps à 3 colonnes ── -->
+<div class="layout">
+  <aside id="hero-rail" class="hero-rail" aria-label="Hero selection"></aside>
+
+  <main class="sheet">
+    <nav id="mastery-tabs" class="mastery-tabs" aria-label="Mastery selection"></nav>
+    <p id="mastery-desc" class="mastery-desc"></p>
+
+    <section class="kit-strip-section">
+      <h2 class="section-title">Kit</h2>
+      <div id="kit-strip" class="kit-strip"></div>
+    </section>
+
+    <section class="gear-section">
+      <h2 class="section-title">Mastery tree <span class="section-sub">client layout · 26 points</span></h2>
+      <div id="mastery-tree" class="mastery-tree"></div>
+    </section>
+
+    <section class="gear-section">
+      <h2 class="section-title">Weapons</h2>
+      <div id="weapon-row" class="weapon-row"></div>
+    </section>
+
+    <section class="gear-section">
+      <h2 class="section-title">Artifacts</h2>
+      <div id="artifact-grid" class="artifact-grid"></div>
+    </section>
+
+    <section class="gear-section">
+      <h2 class="section-title">Universal spells</h2>
+      <div id="spell-row" class="spell-row"></div>
+    </section>
+
+    <section class="talent-section">
+      <h2 class="section-title">Talents <span class="section-sub">choose up to 3 trees</span></h2>
+      <div id="talent-pickers" class="talent-pickers"></div>
+      <div id="talent-trees" class="talent-trees"></div>
+    </section>
+
+    <section class="gear-section">
+      <h2 class="section-title">Weapon mastery <span class="section-sub">tree content not publicly mapped</span></h2>
+      <div id="wm-section" class="wm-section"></div>
+    </section>
+  </main>
+
+  <aside class="stats-panel" aria-label="Stats summary">
+    <div class="stats-panel-head">
+      <h2 class="section-title">Stats</h2>
+      <button class="act ghost audit-toggle" data-action="toggle-audit" aria-haspopup="true" aria-expanded="false"
+              title="Show every gear/talent/mastery contributor counted in the sheet, and why anything isn't">Audit</button>
+    </div>
+    <div id="audit-panel" class="audit-panel"></div>
+    <div id="stats-panel-content"></div>
+  </aside>
+</div>
+
+<!-- ── Tiroir de sélection (armes / artefacts / chips / runes / sorts) ── -->
+<div id="drawer-backdrop" class="drawer-backdrop" data-action="close-drawer"></div>
+<aside id="drawer" class="drawer">
+  <div class="drawer-head">
+    <h2 id="drawer-title">Choose item</h2>
+    <button class="drawer-close" data-action="close-drawer" aria-label="Close picker">×</button>
+  </div>
+  <input id="drawer-search" class="drawer-search" type="text" placeholder="Search…" aria-label="Search items">
+  <div id="drawer-filters" class="drawer-filters"></div>
+  <div id="drawer-list" class="drawer-list"></div>
+</aside>
+
+<!-- ── Panneau de comparaison (build courant vs sauvegarde) ── -->
+<div id="compare-overlay" class="compare-overlay" data-action="close-compare">
+  <div class="compare-card" data-noclose>
+    <div class="drawer-head">
+      <h2>Compare builds</h2>
+      <button class="drawer-close" data-action="close-compare" aria-label="Close comparison">×</button>
+    </div>
+    <div id="compare-body" class="compare-body"></div>
+  </div>
+</div>
+
+<footer class="app-footer">
+  <p>Fan-made planner. Values are indicative — synthesis rolls are random in game.
+     · <a href="https://mfron-42.github.io/corepunk-map-site/" target="_blank" rel="noopener">Kwalat community map</a>
+     · <span id="build-stamp" class="mono"></span></p>
+</footer>
+
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<script src="js/data-load.js"></script>
+<script src="js/share.js"></script>
+<script src="js/engine.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
